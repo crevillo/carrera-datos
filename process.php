@@ -23,3 +23,15 @@ $downloader = new App\Downloader(
 
 $downloader->downloadSourceFiles();
 
+$reader = new \App\Reader(
+    $filesPath,
+    $fileSystem
+);
+
+$start = microtime(true);
+$reader->execute();
+$time_elapsed_secs = microtime(true) - $start;
+
+
+
+
