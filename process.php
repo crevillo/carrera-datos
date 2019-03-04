@@ -29,8 +29,19 @@ $reader = new \App\Reader(
 );
 
 $start = microtime(true);
-$reader->execute();
+$data = $reader->getData();
 $time_elapsed_secs = microtime(true) - $start;
+
+$writer = new \App\Writer(
+    $filesPath,
+    $fileSystem
+);
+
+$data = $writer->writeResults($data);
+print_r($data);
+
+
+
 
 
 
