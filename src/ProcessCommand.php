@@ -30,7 +30,7 @@ class ProcessCommand extends Command
             $filesPath
         );
         $start = microtime(true);
-        $downloader->downloadSourceFiles(true);
+        $downloader->downloadSourceFiles(false);
         $downloadDataTime = microtime(true) - $start;
 
         $reader = new Reader(
@@ -48,7 +48,7 @@ class ProcessCommand extends Command
         );
 
         $start = microtime(true);
-        $data = $writer->writeResults($data);
+        $writer->writeResults($data);
         $writeDataTime = microtime(true) - $start;
 
         $table = new Table($output);
