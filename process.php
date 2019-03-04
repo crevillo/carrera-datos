@@ -21,5 +21,5 @@ $downloader = new App\Downloader(
     $filesPath
 );
 
-$sourceFiles = $downloader->downloadSourceFiles();
+$downloader->downloadSourceFiles();
 
