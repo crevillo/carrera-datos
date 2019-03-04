@@ -18,29 +18,37 @@ class Writer
 
     public function writeResults(array $data)
     {
-        return $this->processData($data);
+       $data = $this->processData($data);
+       $fp = fopen($this->filesPath . 'results.csv', 'w');
+
+       foreach ($data as $item) {
+           $this->fileSystem->appendToFile($this->filesPath . 'results.csv', implode(',', $item) . "\n");
+       }
     }
 
     private function processData(array $data)
     {
         $results = [];
         foreach ($data as $state => $bornData) {
+            $births = $bornData['births'];
             $rowResult = [];
             $rowResult[] = $state;
 
-            foreach ($bornData as $decade => $decadeData) {
+            foreach ($births as $decade => $decadeData) {
                 $rowResult[] = $decadeData['borns'];
             }
 
-            foreach ($bornData as $decade => $decadeDate) {
+            foreach ($births as $decade => $decadeData) {
                 $max = max($decadeData['races']);
                 $key = array_search($max, $decadeData['races']);
                 $rowResult[] = $key;
             }
-            foreach ($bornData as $decade => $decadeDate) {
-                $rowResult[] = $decadeData['male'];
-                $rowResult[] = $decadeData['female'];
-            }
+
+            $rowResult[] = $bornData['male'];
+            $rowResult[] = $bornData['female'];
+
+            $rowResult[] = number_format(round(($bornData['weight']['total'] / $bornData['weight']['numberOfBorns']) *  0.4535, 3), 3);
+
             $results[] = $rowResult;
         }
 

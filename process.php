@@ -8,37 +8,13 @@
 
 require './vendor/autoload.php';
 
-$fileSystem = new \Symfony\Component\Filesystem\Filesystem();
+use App\ProcessCommand;
 
-$filesPath = getenv("HOME") . "/data-race/";
+use Symfony\Component\Console\Application;
 
-$downloader = new App\Downloader(
-    new \Google\Cloud\Storage\StorageClient([
-        'keyFilePath' => './gcloud-account.json',
-        'projectId' => 'tce-sistemas-14702046268333'
-    ]),
-    $fileSystem,
-    $filesPath
-);
-
-$downloader->downloadSourceFiles();
-
-$reader = new \App\Reader(
-    $filesPath,
-    $fileSystem
-);
-
-$start = microtime(true);
-$data = $reader->getData();
-$time_elapsed_secs = microtime(true) - $start;
-
-$writer = new \App\Writer(
-    $filesPath,
-    $fileSystem
-);
-
-$data = $writer->writeResults($data);
-print_r($data);
+$application = new Application();
+$application->add(new ProcessCommand());
+$application->run();
 
 
 

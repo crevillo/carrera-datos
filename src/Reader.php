@@ -65,7 +65,7 @@ class Reader
         $csv->setFlags(\SplFileObject::READ_CSV);
 
         $start = 1;
-        $batch = 200000;
+        $batch = 50000;
         while (!$csv->eof()) {
             foreach (new \LimitIterator($csv, $start, $batch) as $line) {
                 $this->processLine($line);
@@ -81,35 +81,49 @@ class Reader
         }
 
         $state = $line[5];
+
+        if (empty($state)) {
+            return;
+        }
+
         $bornDecade = round($line[1] / 10) * 10;
         $childRace = $line[7];
-        $isMale = (bool)$line[6];
+        $isMale = $line[6];
+        $weightPounds = (float)$line[8];
 
         if (!isset($this->results[$state])) {
             $this->results[$state] = [];
+            $this->results[$state]['births'] = [];
+            $this->results[$state]['male'] = 0;
+            $this->results[$state]['female'] = 0;
+            $this->results[$state]['weight'] = [
+                'total' => 0,
+                'numberOfBorns' => 0,
+            ];
         }
 
-        if (!isset($this->results[$state][$bornDecade])) {
-            $this->results[$state][$bornDecade]['borns'] = 0;
-            $this->results[$state][$bornDecade]['male'] = 0;
-            $this->results[$state][$bornDecade]['female'] = 0;
-            $this->results[$state][$bornDecade]['races'] = [];
+        if (!isset($this->results[$state]['births'][$bornDecade])) {
+            $this->results[$state]['births'][$bornDecade]['borns'] = 0;
+            $this->results[$state]['births'][$bornDecade]['races'] = [];
             foreach ($this->races as $key => $raceName) {
-                $this->results[$state][$bornDecade]['races'][$raceName] = 0;
+                $this->results[$state]['births'][$bornDecade]['races'][$raceName] = 0;
             }
         }
 
-        $this->results[$state][$bornDecade]['borns']++;
+        $this->results[$state]['births'][$bornDecade]['borns']++;
 
         if (isset($this->races[$childRace])) {
             $raceName = $this->races[$childRace];
-            $this->results[$state][$bornDecade]['races'][$raceName]++;
+            $this->results[$state]['births'][$bornDecade]['races'][$raceName]++;
         }
 
-        if ($isMale) {
-            $this->results[$state][$bornDecade]['male']++;
+        if ($isMale == 'true') {
+            $this->results[$state]['male']++;
         } else {
-            $this->results[$state][$bornDecade]['female']++;
+            $this->results[$state]['female']++;
         }
+
+        $this->results[$state]['weight']['numberOfBorns']++;
+        $this->results[$state]['weight']['total'] += $weightPounds;
     }
 }

@@ -1,7 +1,8 @@
 {
     "require": {
         "google/cloud-storage": "^1.11",
-        "symfony/filesystem": "^4.2"
+        "symfony/filesystem": "^4.2",
+        "symfony/console": "^4.2"
     },
     "autoload": {
         "psr-4": {
