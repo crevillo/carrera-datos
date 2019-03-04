@@ -17,6 +17,8 @@ class ProcessCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $executionStart = microtime(true);
+
         $fileSystem = new \Symfony\Component\Filesystem\Filesystem();
 
         $filesPath = getenv("HOME") . "/data-race/";
@@ -66,7 +68,8 @@ class ProcessCommand extends Command
 
         $table->addRows([
             ['Lectura y proceso de archivos en total', $readDataTime],
-            ['Escritura del fichero', $writeDataTime]
+            ['Escritura del fichero', $writeDataTime],
+            ['Tiempo total', microtime(true) - $executionStart]
         ]);
 
         $table->render();
