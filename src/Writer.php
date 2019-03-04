@@ -20,10 +20,14 @@ class Writer
     {
        $data = $this->processData($data);
        $fp = fopen($this->filesPath . 'results.csv', 'w');
-
-       foreach ($data as $item) {
-           $this->fileSystem->appendToFile($this->filesPath . 'results.csv', implode(',', $item) . "\n");
+       $fileContent = '';
+       foreach ($data as $row) {
+           $fileContent .= implode(',', $row) . "\n";
        }
+
+       fwrite($fp, $fileContent);
+       fclose($fp);
+
     }
 
     private function processData(array $data)

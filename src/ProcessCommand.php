@@ -35,7 +35,8 @@ class ProcessCommand extends Command
 
         $reader = new Reader(
             $filesPath,
-            $fileSystem
+            $fileSystem,
+            $output
         );
 
         $start = microtime(true);
@@ -48,18 +49,26 @@ class ProcessCommand extends Command
         );
 
         $start = microtime(true);
-        $writer->writeResults($data);
+        $writer->writeResults($data['data']);
         $writeDataTime = microtime(true) - $start;
 
         $table = new Table($output);
         $table
-            ->setHeaders(['Parte', 'Tiempo en segundos'])
-            ->setRows([
-                ['Descarga', $downloadDataTime],
-                ['Lectura y proceso de archivos', $readDataTime],
-                ['Escritura del fichero', $writeDataTime]
-            ])
-        ;
+            ->setHeaders(['Parte', 'Tiempo en segundos']);
+
+        if ($downloadDataTime > 0) {
+            $table->addRow(['Descarga', $downloadDataTime]);
+        }
+
+        foreach ($data['timers'] as $file => $time) {
+            $table->addRow(["Lectura y procesado de " . $file, $time]);
+        }
+
+        $table->addRows([
+            ['Lectura y proceso de archivos en total', $readDataTime],
+            ['Escritura del fichero', $writeDataTime]
+        ]);
+
         $table->render();
     }
 }

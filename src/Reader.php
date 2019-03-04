@@ -8,6 +8,7 @@
 
 namespace App;
 
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 class Reader
@@ -15,6 +16,8 @@ class Reader
     private $filesDir;
 
     private $fileSystem;
+
+    private $output;
 
     private $results;
 
@@ -33,19 +36,25 @@ class Reader
         '48' => 'Vietnamese'
     ];
 
-    public function __construct(string $filesDir, Filesystem $fileSystem)
+    public function __construct(string $filesDir, Filesystem $fileSystem, OutputInterface $output)
     {
         $this->filesDir = $filesDir;
         $this->fileSystem = $fileSystem;
+        $this->output = $output;
     }
 
     public function getData()
     {
         $files = scandir($this->filesDir);
+        $timers = [];
 
         foreach ($files as $file) {
             if (strpos($file, 'natalidad') !== false) {
+                $this->output->writeln("Empieza lectura de $file");
+                $start = microtime(true);
                 $this->readNatalityFile($file);
+                $timers[$file] = microtime(true) - $start;
+                $this->output->writeln("Finaliza lectura de $file");
             }
         }
 
@@ -55,36 +64,46 @@ class Reader
             ksort($this->results[$state]);
         }
 
-        return $this->results;
+        return ['data' => $this->results, 'timers' => $timers];
     }
 
     private function readNatalityFile($file)
     {
-        print $file . "\n";
-        $csv = new \SplFileObject($this->filesDir . $file);
-        $csv->setFlags(\SplFileObject::READ_CSV);
+        $csv = fopen($this->filesDir . $file, 'r');
 
-        $start = 1;
-        $batch = 50000;
-        while (!$csv->eof()) {
-            foreach (new \LimitIterator($csv, $start, $batch) as $line) {
-                $this->processLine($line);
+        $offset = 0;
+        $limit = 100000;
+        while(!feof($csv))
+        {
+            //Go to where we were when we ended the last batch
+            fseek($csv, $offset);
+
+            $i = 1;
+            while (($currRow = fgetcsv($csv)) !== FALSE)
+            {
+                $i++;
+
+                $this->processLine($currRow);
+                //If we hit our limit or are at the end of the file
+                if ($i >= $limit)
+                {
+                    //Update our current position in the file
+                    $offset = ftell($csv);
+
+                    //Break out of the row processing loop
+                    break;
+                }
             }
-            $start += $batch;
         }
     }
 
     private function processLine($line)
     {
-        if (!isset($line[5])) {
+        if (empty($line[5]) || !is_numeric($line[1])) {
             return;
         }
 
         $state = $line[5];
-
-        if (empty($state)) {
-            return;
-        }
 
         $bornDecade = round($line[1] / 10) * 10;
         $childRace = $line[7];
