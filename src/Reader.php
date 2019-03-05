@@ -21,20 +21,7 @@ class Reader
 
     private $results;
 
-    private $races = [
-        '1' => 'White',
-        '2' => 'Black',
-        '3' => 'American Indian',
-        '4' => 'Chinese',
-        '5' => 'Japanese',
-        '6' => 'Hawaiian',
-        '7' => 'Filipino',
-        '9' => 'Unknown/Other',
-        '18' => 'Asian Indian',
-        '28' => 'Korean',
-        '39' => 'Samoan',
-        '48' => 'Vietnamese'
-    ];
+    private $races = [];
 
     public function __construct(string $filesDir, Filesystem $fileSystem, OutputInterface $output)
     {
@@ -45,6 +32,8 @@ class Reader
 
     public function getData()
     {
+        $this->readRaces();
+
         $files = scandir($this->filesDir);
         $timers = [];
 
@@ -67,33 +56,26 @@ class Reader
         return ['data' => $this->results, 'timers' => $timers];
     }
 
+    private function readRaces()
+    {
+        $csv = fopen($this->filesDir . 'race.csv', 'r');
+
+        $i = 0;
+        while (($currRow = fgetcsv($csv, 256)) !== FALSE) {
+            if ($i > 0) {
+                $this->races[(string)$currRow[0]] = $currRow[1];
+            }
+
+            $i++;
+        }
+    }
+
     private function readNatalityFile($file)
     {
         $csv = fopen($this->filesDir . $file, 'r');
 
-        $offset = 0;
-        $limit = 100000;
-        while(!feof($csv))
-        {
-            //Go to where we were when we ended the last batch
-            fseek($csv, $offset);
-
-            $i = 1;
-            while (($currRow = fgetcsv($csv)) !== FALSE)
-            {
-                $i++;
-
-                $this->processLine($currRow);
-                //If we hit our limit or are at the end of the file
-                if ($i >= $limit)
-                {
-                    //Update our current position in the file
-                    $offset = ftell($csv);
-
-                    //Break out of the row processing loop
-                    break;
-                }
-            }
+        while (($currRow = fgetcsv($csv, 256)) !== FALSE) {
+            $this->processLine($currRow);
         }
     }
 
@@ -111,13 +93,14 @@ class Reader
         $weightPounds = (float)$line[8];
 
         if (!isset($this->results[$state])) {
-            $this->results[$state] = [];
-            $this->results[$state]['births'] = [];
-            $this->results[$state]['male'] = 0;
-            $this->results[$state]['female'] = 0;
-            $this->results[$state]['weight'] = [
-                'total' => 0,
-                'numberOfBorns' => 0,
+            $this->results[$state] = [
+                'births' => [],
+                'male' => 0,
+                'female' => 0,
+                'weight' => [
+                    'total' => 0,
+                    'numberOfBorns' => 0,
+                ]
             ];
         }
 
