@@ -74,20 +74,20 @@ class Reader
     {
         $csv = fopen($this->filesDir . $file, 'r');
 
+        $i = 0;
         while (($currRow = fgetcsv($csv, 256)) !== FALSE) {
-            $this->processLine($currRow);
+            if ($i > 0) {
+                $this->processLine($currRow);
+            }
+            $i++;
         }
     }
 
     private function processLine($line)
     {
-        if (empty($line[5]) || !is_numeric($line[1])) {
-            return;
-        }
-
         $state = $line[5];
 
-        $bornDecade = round($line[1] / 10) * 10;
+        $bornDecade = substr($line[1], 0, -1) . '0';
         $childRace = $line[7];
         $isMale = $line[6];
         $weightPounds = (float)$line[8];
